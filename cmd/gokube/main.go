@@ -14,13 +14,17 @@ import (
 )
 
 func main() {
-	path := "/home/vandaeld/.kube/config"
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("Could not locate user's home directory!")
+	}
+	path := fmt.Sprintf("%s/.kube/config", homeDir)
 	var c kubernetes.KubeConfig
-	err := c.FromFile(path)
+	err = c.FromFile(path)
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
-		Active:   "\U000025b8 {{ .Name | cyan }}",
+		Active:   promptui.IconSelect + " {{ .Name | cyan }}",
 		Inactive: "  {{if .IsCurrent}}{{.Name | green}}{{else}}{{.Name}}{{end}}",
 		Selected: promptui.IconGood + " {{ .Name | faint }}",
 	}
