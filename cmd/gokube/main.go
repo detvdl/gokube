@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
-	"github.com/detvdl/gokube/internal/kubernetes"
+	"github.com/detvdl/gokube/internal/platform/kubernetes"
 	"github.com/detvdl/gokube/internal/platform/tty"
+	"github.com/detvdl/gokube/internal/presentation"
 	"github.com/manifoldco/promptui"
-	"gopkg.in/yaml.v3"
 )
 
 func main() {
@@ -18,9 +17,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not locate user's home directory!")
 	}
-	path := fmt.Sprintf("%s/.kube/config", homeDir)
-	var c kubernetes.KubeConfig
-	err = c.FromFile(path)
+	kubeconfigPath := fmt.Sprintf("%s/.kube/config", homeDir)
+	c, err := kubernetes.FromFile(kubeconfigPath)
+	if err != nil {
+		log.Fatalf("Could not read into json: %v\n", err)
+	}
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
@@ -28,7 +29,8 @@ func main() {
 		Inactive: "  {{if .IsCurrent}}{{.Name | green}}{{else}}{{.Name}}{{end}}",
 		Selected: promptui.IconGood + " {{ .Name | faint }}",
 	}
-	cs, err := c.GetContexts()
+
+	cs, err := presentation.GetContexts(*c)
 	if err != nil {
 		log.Fatalf("Could not get contexts from kubeconfig: %v", err)
 	}
@@ -54,9 +56,5 @@ func main() {
 		return
 	}
 	err = c.SetCurrentContext(cs[i].Name)
-	configString, err := yaml.Marshal(c)
-	if err != nil {
-		log.Fatalf("Failed to marshal edited yaml: %v\n", err)
-	}
-	ioutil.WriteFile(path, configString, os.ModePerm)
+	err = c.ToFile(kubeconfigPath)
 }
