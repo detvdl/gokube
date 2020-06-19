@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/detvdl/gokube/cmd/kubecx/gui"
 	"github.com/detvdl/gokube/internal/platform/kubernetes"
-	"github.com/detvdl/gokube/internal/presentation"
 )
 
 func main() {
@@ -20,7 +20,10 @@ func main() {
 		log.Fatalf("Could not read into json: %v\n", err)
 	}
 
-	ctx, err := presentation.SelectCtx(*c)
+	ctx, err := gui.SelectCtx(*c)
+	if err != nil {
+		log.Fatalf("Selection prompt exited: %v\n", err)
+	}
 	err = c.SetCurrentContext(ctx.Name)
 	err = c.WriteFile(kubeconfigPath)
 	if err != nil {
