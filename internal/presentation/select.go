@@ -1,28 +1,15 @@
-package main
+package presentation
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
 
 	"github.com/detvdl/gokube/internal/platform/kubernetes"
 	"github.com/detvdl/gokube/internal/platform/tty"
-	"github.com/detvdl/gokube/internal/presentation"
 	"github.com/manifoldco/promptui"
 )
 
-func main() {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("Could not locate user's home directory!")
-	}
-	kubeconfigPath := fmt.Sprintf("%s/.kube/config", homeDir)
-	c, err := kubernetes.FromFile(kubeconfigPath)
-	if err != nil {
-		log.Fatalf("Could not read into json: %v\n", err)
-	}
-
+func SelectCtx(c kubernetes.KubeConfig) (*Context, error) {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
 		Active:   promptui.IconSelect + " {{ .Name | cyan }} {{if .IsCurrent}}{{\"(active)\" | cyan}}{{end}}",
@@ -30,9 +17,9 @@ func main() {
 		Selected: promptui.IconGood + " Switched to {{ .Name | faint }}",
 	}
 
-	cs, err := presentation.GetContexts(*c)
+	cs, err := GetContexts(c)
 	if err != nil {
-		log.Fatalf("Could not get contexts from kubeconfig: %v", err)
+		return nil, fmt.Errorf("Could not get contexts from kubeconfig: %w", err)
 	}
 	searcher := func(input string, index int) bool {
 		ctx := cs[index]
@@ -53,11 +40,7 @@ func main() {
 	i, _, err := prompt.Run()
 	if err != nil {
 		fmt.Printf("Prompt failed: %q\n", err)
-		return
+		return nil, err
 	}
-	err = c.SetCurrentContext(cs[i].Name)
-	err = c.ToFile(kubeconfigPath)
-	if err != nil {
-		log.Fatalf("Failed to write modified KubeConfig: %v\n", err)
-	}
+	return &cs[i], nil
 }

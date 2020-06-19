@@ -19,7 +19,7 @@ func FromFile(fp string) (*KubeConfig, error) {
 	return &KubeConfig{Config: clientCfg}, nil
 }
 
-func (kc KubeConfig) ToFile(fp string) error {
+func (kc KubeConfig) WriteFile(fp string) error {
 	return clientcmd.WriteToFile(*kc.Config, fp)
 }
 
