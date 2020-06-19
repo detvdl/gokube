@@ -25,9 +25,9 @@ func main() {
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
-		Active:   promptui.IconSelect + " {{ .Name | cyan }}",
-		Inactive: "  {{if .IsCurrent}}{{.Name | green}}{{else}}{{.Name}}{{end}}",
-		Selected: promptui.IconGood + " {{ .Name | faint }}",
+		Active:   promptui.IconSelect + " {{ .Name | cyan }} {{if .IsCurrent}}{{\"(active)\" | cyan}}{{end}}",
+		Inactive: "  {{if .IsCurrent}}{{.Name | green}} {{\"(active)\" | green}}{{else}}{{.Name}}{{end}}",
+		Selected: promptui.IconGood + " Switched to {{ .Name | faint }}",
 	}
 
 	cs, err := presentation.GetContexts(*c)
@@ -57,4 +57,7 @@ func main() {
 	}
 	err = c.SetCurrentContext(cs[i].Name)
 	err = c.ToFile(kubeconfigPath)
+	if err != nil {
+		log.Fatalf("Failed to write modified KubeConfig: %v\n", err)
+	}
 }
