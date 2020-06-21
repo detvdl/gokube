@@ -11,12 +11,13 @@ type KubeConfig struct {
 	Config *clientcmdapi.Config
 }
 
-func FromFile(fp string) (*KubeConfig, error) {
+func (k *KubeConfig) FromFile(fp string) error {
 	clientCfg, err := clientcmd.LoadFromFile(fp)
 	if err != nil {
-		return nil, fmt.Errorf("Could not load from file: %w\n", err)
+		return fmt.Errorf("Could not load from file: %w\n", err)
 	}
-	return &KubeConfig{Config: clientCfg}, nil
+	k.Config = clientCfg
+	return nil
 }
 
 func (kc KubeConfig) WriteFile(fp string) error {

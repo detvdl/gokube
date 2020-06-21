@@ -1,4 +1,4 @@
-package presentation
+package gui
 
 import (
 	"github.com/detvdl/gokube/internal/platform/kubernetes"

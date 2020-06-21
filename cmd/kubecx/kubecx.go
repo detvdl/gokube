@@ -15,12 +15,13 @@ func main() {
 		log.Fatalf("Could not locate user's home directory!")
 	}
 	kubeconfigPath := fmt.Sprintf("%s/.kube/config", homeDir)
-	c, err := kubernetes.FromFile(kubeconfigPath)
+	var c kubernetes.KubeConfig
+	err = c.FromFile(kubeconfigPath)
 	if err != nil {
 		log.Fatalf("Could not read into json: %v\n", err)
 	}
 
-	ctx, err := gui.SelectCtx(*c)
+	ctx, err := gui.SelectCtx(c)
 	if err != nil {
 		log.Fatalf("Selection prompt exited: %v\n", err)
 	}

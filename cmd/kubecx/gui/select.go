@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/detvdl/gokube/internal/gui"
 	"github.com/detvdl/gokube/internal/platform/kubernetes"
 	"github.com/detvdl/gokube/internal/platform/tty"
-	"github.com/detvdl/gokube/internal/presentation"
 	"github.com/manifoldco/promptui"
 )
 
-func SelectCtx(c kubernetes.KubeConfig) (*presentation.Context, error) {
+func SelectCtx(c kubernetes.KubeConfig) (*gui.Context, error) {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
 		Active:   promptui.IconSelect + " {{ .Name | cyan }} {{if .IsCurrent}}{{\"(active)\" | cyan}}{{end}}",
@@ -18,7 +18,7 @@ func SelectCtx(c kubernetes.KubeConfig) (*presentation.Context, error) {
 		Selected: promptui.IconGood + " Switched to {{ .Name | faint }}",
 	}
 
-	cs, err := presentation.GetContexts(c)
+	cs, err := gui.GetContexts(c)
 	if err != nil {
 		return nil, fmt.Errorf("Could not get contexts from kubeconfig: %w", err)
 	}
