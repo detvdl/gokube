@@ -18,8 +18,8 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		v.Highlight = true
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
-		namespaces, err := gui.environment.GetNamespaces()
-		gui.namespaceView.Namespaces = namespaces
+		namespaces, err := gui.kubeEnv.GetNamespaces()
+		gui.state.namespaces = namespaces
 		if err != nil {
 			log.Fatalf("Failed to list pods: %v\n", err)
 		}
@@ -35,7 +35,7 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 			return err
 		}
 	}
-	if v, err := g.SetView("pods", width/2, 0, width-2, height, 0); err != nil {
+	if v, err := g.SetView("pods", width/2, 0, width-2, height-2, 0); err != nil {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
@@ -43,12 +43,16 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		v.Highlight = true
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
-		pods, err := gui.environment.GetPods(gui.namespaceView.Namespaces[gui.namespaceView.Selected].Name)
+		pods, err := gui.kubeEnv.GetPods(gui.state.namespaces[gui.namespaceView.Selected].Name)
 		if err != nil {
 			return fmt.Errorf("Failed to fetch pods: %w\n", err)
 		}
 		gui.podView.View = v
-		gui.podView.SetPods(pods)
+		gui.state.pods = pods
+	}
+	err := gui.updateAllPanelViews()
+	if err != nil {
+		return fmt.Errorf("Failed to update all views: %w\n", err)
 	}
 	return nil
 }

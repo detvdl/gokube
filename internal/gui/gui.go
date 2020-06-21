@@ -7,17 +7,30 @@ import (
 
 type Gui struct {
 	g             *gocui.Gui
-	environment   *kubernetes.Environment
+	kubeEnv       *kubernetes.Environment
+	state         *guiState
 	namespaceView *NamespaceView
 	podView       *PodView
+	panelViews    []PanelView
+}
+
+type guiState struct {
+	pods       []*kubernetes.Pod
+	namespaces []*kubernetes.Namespace
 }
 
 func NewGui(env *kubernetes.Environment) (*Gui, error) {
-	return &Gui{
-		environment:   env,
-		namespaceView: &NamespaceView{make([]*kubernetes.Namespace, 0), 0, nil},
-		podView:       &PodView{make([]*kubernetes.Pod, 0), 0, nil},
-	}, nil
+	gui := &Gui{
+		kubeEnv: env,
+		state: &guiState{
+			pods:       make([]*kubernetes.Pod, 0),
+			namespaces: make([]*kubernetes.Namespace, 0),
+		},
+		namespaceView: newNamespaceView(),
+		podView:       newPodView(),
+	}
+	gui.panelViews = []PanelView{gui.namespaceView, gui.podView}
+	return gui, nil
 }
 
 func (gui *Gui) Run() error {
