@@ -51,8 +51,12 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		gui.podView.View = v
 		gui.podView.PrevView = gui.namespaceView.View
 		gui.state.pods = pods
+		if len(gui.state.pods) > 0 {
+			gui.state.currentPod = gui.state.pods[gui.podView.Selected]
+		}
+		gui.podView.render(gui.state)
 	}
-	if v, err := g.SetView("details", width/2, 0, width, height-2, 0); err != nil {
+	if v, err := g.SetView("details", width/2, 0, width-1, height-2, 0); err != nil {
 		gui.podView.NextView = v
 		if !gocui.IsUnknownView(err) {
 			return err
@@ -64,6 +68,7 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 
 		gui.detailView.View = v
 		gui.detailView.PrevView = gui.podView.View
+		gui.detailView.render(gui.state)
 	}
 
 	return nil

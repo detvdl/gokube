@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
@@ -33,14 +34,27 @@ func (v *DetailView) name() string {
 	return v.Name
 }
 
-func (v *DetailView) init(state *guiState) error {
+func (v *DetailView) render(state *guiState) error {
+	v.View.Clear()
+	if state.currentPod != nil {
+		spec, err := state.currentPod.Pod.Spec.Marshal()
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(v.View, state.currentPod.Name)
+		fmt.Fprintf(v.View, "Spec: %s\n", string(spec))
+		fmt.Fprintf(v.View, "Phase: %s\n", state.currentPod.Pod.Status.Phase)
+		fmt.Fprintf(v.View, "Stringified: %s\n", state.currentPod.Pod.Status.String())
+	} else {
+		fmt.Fprintln(v.View, "No Pod Details!")
+	}
 	return nil
 }
 
 func (v *DetailView) refresh(state *guiState) error {
 	v.View.Clear()
 	if state.currentPod != nil {
-		spec, err := state.currentPod.Pod.Spec.Marshal()
+		spec, err := json.MarshalIndent(state.currentPod.Pod.Spec, "", "  ")
 		if err != nil {
 			return err
 		}

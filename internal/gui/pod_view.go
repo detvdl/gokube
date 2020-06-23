@@ -66,7 +66,15 @@ func (v *PodView) name() string {
 	return v.Name
 }
 
-func (v *PodView) init(state *guiState) error {
+func (v *PodView) render(state *guiState) error {
+	v.View.Clear()
+	for i, p := range state.pods {
+		if i < len(state.pods)-1 {
+			fmt.Fprintln(v.View, p.Name)
+		} else {
+			fmt.Fprint(v.View, p.Name)
+		}
+	}
 	return nil
 }
 

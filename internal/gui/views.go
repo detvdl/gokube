@@ -9,7 +9,7 @@ import (
 
 type PanelView interface {
 	name() string
-	init(state *guiState) error
+	render(state *guiState) error
 	refresh(state *guiState) error
 }
 

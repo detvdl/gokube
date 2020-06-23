@@ -74,7 +74,7 @@ func (v *NamespaceView) name() string {
 	return v.Name
 }
 
-func (v *NamespaceView) init(state *guiState) error {
+func (v *NamespaceView) render(state *guiState) error {
 	return nil
 }
 
