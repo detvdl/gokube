@@ -11,12 +11,14 @@ type Gui struct {
 	state         *guiState
 	namespaceView *NamespaceView
 	podView       *PodView
+	detailView    *DetailView
 	panelViews    []PanelView
 }
 
 type guiState struct {
 	pods       []*kubernetes.Pod
 	namespaces []*kubernetes.Namespace
+	currentPod *kubernetes.Pod
 }
 
 func NewGui(env *kubernetes.Environment) (*Gui, error) {
@@ -25,11 +27,13 @@ func NewGui(env *kubernetes.Environment) (*Gui, error) {
 		state: &guiState{
 			pods:       make([]*kubernetes.Pod, 0),
 			namespaces: make([]*kubernetes.Namespace, 0),
+			currentPod: nil,
 		},
 		namespaceView: newNamespaceView(),
 		podView:       newPodView(),
+		detailView:    newDetailView(),
 	}
-	gui.panelViews = []PanelView{gui.namespaceView, gui.podView}
+	gui.panelViews = []PanelView{gui.namespaceView, gui.podView, gui.detailView}
 	return gui, nil
 }
 

@@ -11,7 +11,7 @@ import (
 type Pod struct {
 	Name      string
 	Namespace string
-	*corev1.Pod
+	corev1.Pod
 }
 
 func (e *Environment) GetPods(namespace string) ([]*Pod, error) {
@@ -21,7 +21,7 @@ func (e *Environment) GetPods(namespace string) ([]*Pod, error) {
 	}
 	pods := make([]*Pod, len(p.Items))
 	for i, item := range p.Items {
-		pods[i] = &Pod{Name: item.Name, Namespace: namespace, Pod: &item}
+		pods[i] = &Pod{Name: item.Name, Namespace: namespace, Pod: item}
 	}
 	return pods, nil
 }

@@ -10,7 +10,7 @@ import (
 func (gui *Gui) layout(g *gocui.Gui) error {
 	g.Highlight = true
 	width, height := g.Size()
-	if v, err := g.SetView("namespaces", 0, 0, width/2-2, height/3, 0); err != nil {
+	if v, err := g.SetView("namespaces", 0, 0, width/2-2, height/3-2, 0); err != nil {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
@@ -35,7 +35,8 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 			return err
 		}
 	}
-	if v, err := g.SetView("pods", width/2, 0, width-2, height-2, 0); err != nil {
+	if v, err := g.SetView("pods", 0, height/3, width/2-2, height-2, 0); err != nil {
+		gui.namespaceView.NextView = v
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
@@ -48,19 +49,30 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 			return fmt.Errorf("Failed to fetch pods: %w\n", err)
 		}
 		gui.podView.View = v
+		gui.podView.PrevView = gui.namespaceView.View
 		gui.state.pods = pods
 	}
-	err := gui.updateAllPanelViews()
-	if err != nil {
-		return fmt.Errorf("Failed to update all views: %w\n", err)
+	if v, err := g.SetView("details", width/2, 0, width, height-2, 0); err != nil {
+		gui.podView.NextView = v
+		if !gocui.IsUnknownView(err) {
+			return err
+		}
+		v.Title = "details"
+		v.Highlight = true
+		v.SelFgColor = gocui.ColorBlack
+		v.SelBgColor = gocui.ColorWhite
+
+		gui.detailView.View = v
+		gui.detailView.PrevView = gui.podView.View
 	}
+
 	return nil
 }
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		cx, cy := v.Cursor()
-		if err := FocusPoint(v, cx, cy+1); err != nil {
+		if err := focusPoint(v, cx, cy+1); err != nil {
 			return fmt.Errorf("Could not focus point: %w\n", err)
 		}
 	}
@@ -70,16 +82,16 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
 		cx, cy := v.Cursor()
-		if err := FocusPoint(v, cx, cy-1); err != nil {
+		if err := focusPoint(v, cx, cy-1); err != nil {
 			return fmt.Errorf("Could not focus point: %w\n", err)
 		}
 	}
 	return nil
 }
 
-func FocusPoint(v *gocui.View, cx int, cy int) error {
-	lineCount := len(v.BufferLines())
-	if cy < 0 || cy > lineCount-1 {
+func focusPoint(v *gocui.View, cx int, cy int) error {
+	lineCount := v.LinesHeight()
+	if cy < 0 || cy > lineCount {
 		return nil
 	}
 	_, height := v.Size()
@@ -132,6 +144,18 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("namespaces", gocui.KeyArrowUp, gocui.ModNone, gui.handlePrevNamespace); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("namespaces", gocui.KeyArrowRight, gocui.ModNone, gui.handleNamespaceNextView); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("pods", gocui.KeyArrowDown, gocui.ModNone, gui.handleNextPod); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("pods", gocui.KeyArrowUp, gocui.ModNone, gui.handlePrevPod); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("pods", gocui.KeyArrowLeft, gocui.ModNone, gui.handlePodsPrevView); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
