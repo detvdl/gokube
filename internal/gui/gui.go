@@ -5,6 +5,11 @@ import (
 	"github.com/detvdl/gokube/internal/platform/kubernetes"
 )
 
+const (
+	DIRECTION_UP = iota
+	DIRECTION_DOWN
+)
+
 type Gui struct {
 	g             *gocui.Gui
 	kubeEnv       *kubernetes.Environment

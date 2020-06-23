@@ -11,11 +11,11 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 	g.Highlight = true
 	width, height := g.Size()
 	if v, err := g.SetView("namespaces", 0, 0, width/2-2, height/3-2, 0); err != nil {
+		v.Highlight = true
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Title = "namespaces"
-		v.Highlight = true
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
 		namespaces, err := gui.kubeEnv.GetNamespaces()
@@ -36,12 +36,12 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		}
 	}
 	if v, err := g.SetView("pods", 0, height/3, width/2-2, height-2, 0); err != nil {
+		v.Highlight = true
 		gui.namespaceView.NextView = v
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Title = "pods"
-		v.Highlight = true
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
 		pods, err := gui.kubeEnv.GetPods(gui.state.namespaces[gui.namespaceView.Selected].Name)
@@ -57,40 +57,18 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		gui.podView.render(gui.state)
 	}
 	if v, err := g.SetView("details", width/2, 0, width-1, height-2, 0); err != nil {
+		v.Highlight = false
 		gui.podView.NextView = v
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Title = "details"
-		v.Highlight = true
-		v.SelFgColor = gocui.ColorBlack
-		v.SelBgColor = gocui.ColorWhite
 
 		gui.detailView.View = v
 		gui.detailView.PrevView = gui.podView.View
 		gui.detailView.render(gui.state)
 	}
 
-	return nil
-}
-
-func cursorDown(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		cx, cy := v.Cursor()
-		if err := focusPoint(v, cx, cy+1); err != nil {
-			return fmt.Errorf("Could not focus point: %w\n", err)
-		}
-	}
-	return nil
-}
-
-func cursorUp(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		cx, cy := v.Cursor()
-		if err := focusPoint(v, cx, cy-1); err != nil {
-			return fmt.Errorf("Could not focus point: %w\n", err)
-		}
-	}
 	return nil
 }
 

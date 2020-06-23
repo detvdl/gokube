@@ -37,7 +37,7 @@ func (v *DetailView) name() string {
 func (v *DetailView) render(state *guiState) error {
 	v.View.Clear()
 	if state.currentPod != nil {
-		spec, err := state.currentPod.Pod.Spec.Marshal()
+		spec, err := json.MarshalIndent(state.currentPod.Pod.Spec, "", "  ")
 		if err != nil {
 			return err
 		}
@@ -52,18 +52,5 @@ func (v *DetailView) render(state *guiState) error {
 }
 
 func (v *DetailView) refresh(state *guiState) error {
-	v.View.Clear()
-	if state.currentPod != nil {
-		spec, err := json.MarshalIndent(state.currentPod.Pod.Spec, "", "  ")
-		if err != nil {
-			return err
-		}
-		fmt.Fprintln(v.View, state.currentPod.Name)
-		fmt.Fprintf(v.View, "Spec: %s\n", string(spec))
-		fmt.Fprintf(v.View, "Phase: %s\n", state.currentPod.Pod.Status.Phase)
-		fmt.Fprintf(v.View, "Stringified: %s\n", state.currentPod.Pod.Status.String())
-	} else {
-		fmt.Fprintln(v.View, "No Pod Details!")
-	}
-	return nil
+	return v.render(state)
 }
