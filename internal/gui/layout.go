@@ -44,13 +44,13 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		v.Title = "pods"
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
-		// pods, err := gui.kubeEnv.GetPods(gui.state.namespaces[gui.namespaceView.Selected].Name)
-		// if err != nil {
-		// 	return fmt.Errorf("Failed to fetch pods: %w\n", err)
-		// }
+		pods, err := gui.kubeEnv.GetPods(gui.state.namespaces[gui.namespaceView.Selected].Name)
+		if err != nil {
+			return fmt.Errorf("Failed to fetch pods: %w\n", err)
+		}
 		gui.podView.View = v
 		gui.podView.PrevView = gui.namespaceView.View
-		// gui.state.pods.SetItems(pods)
+		gui.state.pods.SetItems(pods)
 	}
 	if v, err := g.SetView("details", width/2, 0, width-1, height-2, 0); err != nil {
 		v.Highlight = false
@@ -59,9 +59,9 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Title = "details"
-
 		gui.detailView.View = v
 		gui.detailView.PrevView = gui.podView.View
+		gui.detailView.render(gui.state.pods.GetSelected())
 	}
 
 	return nil

@@ -34,6 +34,10 @@ func (v *DetailView) UpdateItems(pods []*kubernetes.Pod) error {
 
 func (v *DetailView) UpdateSelected(pod *kubernetes.Pod, dy int) error {
 	v.View.Clear()
+	return v.render(pod)
+}
+
+func (v *DetailView) render(pod *kubernetes.Pod) error {
 	if pod != nil {
 		spec, err := json.MarshalIndent(pod.Pod.Spec, "", "  ")
 		if err != nil {
