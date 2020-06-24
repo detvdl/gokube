@@ -53,6 +53,10 @@ func (gui *Gui) handlePrevPod(g *gocui.Gui, v *gocui.View) error {
 
 func (v *PodView) UpdateItems(pods []*kubernetes.Pod) error {
 	v.View.Clear()
+	return v.render(pods)
+}
+
+func (v *PodView) render(pods []*kubernetes.Pod) error {
 	for i, p := range pods {
 		if i < len(pods)-1 {
 			fmt.Fprintln(v.View, p.Name)
@@ -64,7 +68,7 @@ func (v *PodView) UpdateItems(pods []*kubernetes.Pod) error {
 }
 
 func (v *PodView) UpdateSelected(pod *kubernetes.Pod, line int) error {
-	return v.View.SetCursor(0, line)
+	return focusPoint(v.View, 0, line)
 }
 
 func (v *PodView) GetName() string {

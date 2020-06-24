@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/detvdl/gokube/internal/platform/kubernetes"
 )
 
 type NamespaceView struct {
@@ -17,7 +18,6 @@ func newNamespaceView() *NamespaceView {
 	return &NamespaceView{
 		Name:     "namespaces",
 		Selected: 0,
-		View:     nil,
 	}
 }
 
@@ -32,30 +32,13 @@ func (gui *Gui) handleNamespaceChange(g *gocui.Gui, v *gocui.View, direction int
 	if _, err := gui.g.SetCurrentView(v.Name()); err != nil {
 		return err
 	}
-	var cond bool
 	switch direction {
 	case DIRECTION_DOWN:
-		cond = gui.namespaceView.Selected < len(gui.state.namespaces)-1
-		if cond {
-			gui.namespaceView.Selected += 1
-			v.MoveCursor(0, 1, false)
-		}
+		gui.state.nextNamespace()
 	case DIRECTION_UP:
-		cond = gui.namespaceView.Selected > 0
-		if cond {
-			gui.namespaceView.Selected -= 1
-			v.MoveCursor(0, -1, false)
-		}
+		gui.state.prevNamespace()
 	default:
 		return fmt.Errorf("Could not execute movement: %d\n", direction)
-	}
-	if cond {
-		pods, err := gui.kubeEnv.GetPods(gui.state.namespaces[gui.namespaceView.Selected].Name)
-		if err != nil {
-			return fmt.Errorf("Failed to fetch pods: %w\n", err)
-		}
-		gui.state.updatePods(pods)
-		gui.state.updateCurrentPod(0)
 	}
 	return nil
 }
@@ -66,4 +49,28 @@ func (gui *Gui) handleNextNamespace(g *gocui.Gui, v *gocui.View) error {
 
 func (gui *Gui) handlePrevNamespace(g *gocui.Gui, v *gocui.View) error {
 	return gui.handleNamespaceChange(g, v, DIRECTION_UP)
+}
+
+func (v *NamespaceView) GetName() string {
+	return v.Name
+}
+
+func (v *NamespaceView) UpdateItems(items []*kubernetes.Namespace) error {
+	v.View.Clear()
+	return v.render(items)
+}
+
+func (v *NamespaceView) render(items []*kubernetes.Namespace) error {
+	for i, ns := range items {
+		if i < len(items)-1 {
+			fmt.Fprintln(v.View, ns.Name)
+		} else {
+			fmt.Fprint(v.View, ns.Name)
+		}
+	}
+	return nil
+}
+
+func (v *NamespaceView) UpdateSelected(item *kubernetes.Namespace, line int) error {
+	return focusPoint(v.View, 0, line)
 }

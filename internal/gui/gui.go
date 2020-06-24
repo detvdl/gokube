@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"fmt"
+
 	"github.com/awesome-gocui/gocui"
 	"github.com/detvdl/gokube/internal/models"
 	"github.com/detvdl/gokube/internal/platform/kubernetes"
@@ -13,43 +15,35 @@ const (
 
 type Gui struct {
 	g             *gocui.Gui
-	kubeEnv       *kubernetes.Environment
 	state         *guiState
+	contextView   *ContextView
 	namespaceView *NamespaceView
 	podView       *PodView
 	detailView    *DetailView
 }
 
-type guiState struct {
-	pods       *models.Pods
-	namespaces []*kubernetes.Namespace
-	currentPod *kubernetes.Pod
-}
-
-func (s *guiState) updatePods(pods []*kubernetes.Pod) {
-	s.pods.SetItems(pods)
-}
-
-func (s *guiState) updateCurrentPod(idx int) {
-	s.pods.SetCurrentItem(idx)
-}
-
 func NewGui(env *kubernetes.Environment) (*Gui, error) {
 	gui := &Gui{
-		kubeEnv: env,
 		state: &guiState{
+			kubeEnv:    env,
 			pods:       models.NewPods(make([]*kubernetes.Pod, 0)),
-			namespaces: make([]*kubernetes.Namespace, 0),
+			namespaces: models.NewNamespaces(make([]*kubernetes.Namespace, 0)),
 			currentPod: nil,
 		},
+		contextView:   newContextView(),
 		namespaceView: newNamespaceView(),
 		podView:       newPodView(),
 		detailView:    newDetailView(),
 	}
-	err := gui.state.pods.Register(gui.podView, gui.detailView)
+	err := gui.state.init()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize gui state: %w\n", err)
+	}
+	err = gui.state.pods.Register(gui.podView, gui.detailView)
 	if err != nil {
 		return nil, err
 	}
+	err = gui.state.namespaces.Register(gui.namespaceView)
 	return gui, nil
 }
 

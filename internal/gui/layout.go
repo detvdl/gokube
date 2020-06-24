@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/awesome-gocui/gocui"
 )
@@ -10,7 +9,25 @@ import (
 func (gui *Gui) layout(g *gocui.Gui) error {
 	g.Highlight = true
 	width, height := g.Size()
-	if v, err := g.SetView("namespaces", 0, 0, width/2-2, height/3-2, 0); err != nil {
+	if v, err := g.SetView("contexts", 0, 0, width/2-2, height/8-1, 0); err != nil {
+		gui.contextView.View = v
+
+		v.Highlight = true
+		if !gocui.IsUnknownView(err) {
+			return err
+		}
+		v.Title = "contexts"
+		v.SelFgColor = gocui.ColorBlack
+		v.SelBgColor = gocui.ColorWhite
+		ctxs, err := GetContexts(*gui.state.kubeEnv.KubeConfig)
+		if err != nil {
+			return err
+		}
+		gui.contextView.render(gui.state.kubeEnv.CurrentContext, ctxs)
+	}
+	if v, err := g.SetView("namespaces", 0, height/8, width/2-2, height/3-1, 0); err != nil {
+		gui.namespaceView.View = v
+
 		v.Highlight = true
 		if !gocui.IsUnknownView(err) {
 			return err
@@ -18,39 +35,26 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		v.Title = "namespaces"
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
-		namespaces, err := gui.kubeEnv.GetNamespaces()
-		gui.state.namespaces = namespaces
-		if err != nil {
-			log.Fatalf("Failed to list pods: %v\n", err)
-		}
-		for i, ns := range namespaces {
-			if i < len(namespaces)-1 {
-				fmt.Fprintln(v, ns.Name)
-			} else {
-				fmt.Fprint(v, ns.Name)
-			}
-		}
-		gui.namespaceView.View = v
+
 		if _, err := g.SetCurrentView("namespaces"); err != nil {
 			return err
 		}
+		gui.namespaceView.render(gui.state.namespaces.Items)
 	}
 	if v, err := g.SetView("pods", 0, height/3, width/2-2, height-2, 0); err != nil {
-		v.Highlight = true
+		gui.podView.View = v
+		gui.podView.PrevView = gui.namespaceView.View
 		gui.namespaceView.NextView = v
+
+		v.Highlight = true
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
+
 		v.Title = "pods"
 		v.SelFgColor = gocui.ColorBlack
 		v.SelBgColor = gocui.ColorWhite
-		pods, err := gui.kubeEnv.GetPods(gui.state.namespaces[gui.namespaceView.Selected].Name)
-		if err != nil {
-			return fmt.Errorf("Failed to fetch pods: %w\n", err)
-		}
-		gui.podView.View = v
-		gui.podView.PrevView = gui.namespaceView.View
-		gui.state.pods.SetItems(pods)
+		gui.podView.render(gui.state.pods.Items)
 	}
 	if v, err := g.SetView("details", width/2, 0, width-1, height-2, 0); err != nil {
 		v.Highlight = false

@@ -87,7 +87,7 @@ func (p *Pods) register(observer PodObserver) error {
 }
 
 func (p *Pods) Deregister(observer PodObserver) error {
-	p.ObserverList = removeFromslice(p.ObserverList, observer)
+	p.ObserverList = removePodObserver(p.ObserverList, observer)
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (p *Pods) notifyCurrentItemChanged(dy int) {
 	}
 }
 
-func removeFromslice(observerList []PodObserver, observerToRemove PodObserver) []PodObserver {
+func removePodObserver(observerList []PodObserver, observerToRemove PodObserver) []PodObserver {
 	observerListLength := len(observerList)
 	for i, observer := range observerList {
 		if observerToRemove.GetName() == observer.GetName() {
