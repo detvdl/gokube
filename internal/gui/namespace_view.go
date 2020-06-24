@@ -54,11 +54,8 @@ func (gui *Gui) handleNamespaceChange(g *gocui.Gui, v *gocui.View, direction int
 		if err != nil {
 			return fmt.Errorf("Failed to fetch pods: %w\n", err)
 		}
-		gui.state.pods = pods
-		err = gui.updatePanelViews("pods", "details")
-		if err != nil {
-			return err
-		}
+		gui.state.updatePods(pods)
+		gui.state.updateCurrentPod(0)
 	}
 	return nil
 }
@@ -69,16 +66,4 @@ func (gui *Gui) handleNextNamespace(g *gocui.Gui, v *gocui.View) error {
 
 func (gui *Gui) handlePrevNamespace(g *gocui.Gui, v *gocui.View) error {
 	return gui.handleNamespaceChange(g, v, DIRECTION_UP)
-}
-
-func (v *NamespaceView) name() string {
-	return v.Name
-}
-
-func (v *NamespaceView) render(state *guiState) error {
-	return nil
-}
-
-func (v *NamespaceView) refresh(state *guiState) error {
-	return nil
 }

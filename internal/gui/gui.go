@@ -2,6 +2,7 @@ package gui
 
 import (
 	"github.com/awesome-gocui/gocui"
+	"github.com/detvdl/gokube/internal/models"
 	"github.com/detvdl/gokube/internal/platform/kubernetes"
 )
 
@@ -17,20 +18,27 @@ type Gui struct {
 	namespaceView *NamespaceView
 	podView       *PodView
 	detailView    *DetailView
-	panelViews    []PanelView
 }
 
 type guiState struct {
-	pods       []*kubernetes.Pod
+	pods       *models.Pods
 	namespaces []*kubernetes.Namespace
 	currentPod *kubernetes.Pod
+}
+
+func (s *guiState) updatePods(pods []*kubernetes.Pod) {
+	s.pods.SetItems(pods)
+}
+
+func (s *guiState) updateCurrentPod(idx int) {
+	s.pods.SetCurrentItem(idx)
 }
 
 func NewGui(env *kubernetes.Environment) (*Gui, error) {
 	gui := &Gui{
 		kubeEnv: env,
 		state: &guiState{
-			pods:       make([]*kubernetes.Pod, 0),
+			pods:       models.NewPods(make([]*kubernetes.Pod, 0)),
 			namespaces: make([]*kubernetes.Namespace, 0),
 			currentPod: nil,
 		},
@@ -38,7 +46,10 @@ func NewGui(env *kubernetes.Environment) (*Gui, error) {
 		podView:       newPodView(),
 		detailView:    newDetailView(),
 	}
-	gui.panelViews = []PanelView{gui.namespaceView, gui.podView, gui.detailView}
+	err := gui.state.pods.Register(gui.podView, gui.detailView)
+	if err != nil {
+		return nil, err
+	}
 	return gui, nil
 }
 

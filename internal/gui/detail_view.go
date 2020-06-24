@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/detvdl/gokube/internal/platform/kubernetes"
 )
 
 type DetailView struct {
 	Name     string
-	Selected int
 	View     *gocui.View
 	NextView *gocui.View
 	PrevView *gocui.View
@@ -17,9 +17,7 @@ type DetailView struct {
 
 func newDetailView() *DetailView {
 	return &DetailView{
-		Name:     "details",
-		Selected: 0,
-		View:     nil,
+		Name: "details",
 	}
 }
 
@@ -30,27 +28,27 @@ func (gui *Gui) handleDetailsPrevView(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func (v *DetailView) name() string {
-	return v.Name
+func (v *DetailView) UpdateItems(pods []*kubernetes.Pod) error {
+	return nil
 }
 
-func (v *DetailView) render(state *guiState) error {
+func (v *DetailView) UpdateSelected(pod *kubernetes.Pod, dy int) error {
 	v.View.Clear()
-	if state.currentPod != nil {
-		spec, err := json.MarshalIndent(state.currentPod.Pod.Spec, "", "  ")
+	if pod != nil {
+		spec, err := json.MarshalIndent(pod.Pod.Spec, "", "  ")
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(v.View, state.currentPod.Name)
+		fmt.Fprintln(v.View, pod.Pod.Name)
 		fmt.Fprintf(v.View, "Spec: %s\n", string(spec))
-		fmt.Fprintf(v.View, "Phase: %s\n", state.currentPod.Pod.Status.Phase)
-		fmt.Fprintf(v.View, "Stringified: %s\n", state.currentPod.Pod.Status.String())
+		fmt.Fprintf(v.View, "Phase: %s\n", pod.Pod.Status.Phase)
+		fmt.Fprintf(v.View, "Stringified: %s\n", pod.Pod.Status.String())
 	} else {
 		fmt.Fprintln(v.View, "No Pod Details!")
 	}
 	return nil
 }
 
-func (v *DetailView) refresh(state *guiState) error {
-	return v.render(state)
+func (v *DetailView) GetName() string {
+	return v.Name
 }

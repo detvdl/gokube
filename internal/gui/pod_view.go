@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/detvdl/gokube/internal/platform/kubernetes"
 )
 
 type PodView struct {
 	Name     string
-	Selected int
 	View     *gocui.View
 	NextView *gocui.View
 	PrevView *gocui.View
@@ -16,9 +16,8 @@ type PodView struct {
 
 func newPodView() *PodView {
 	return &PodView{
-		Name:     "pods",
-		Selected: 0,
-		View:     nil,
+		Name: "pods",
+		View: nil,
 	}
 }
 
@@ -33,29 +32,13 @@ func (gui *Gui) handlePodChange(g *gocui.Gui, v *gocui.View, direction int) erro
 	if _, err := gui.g.SetCurrentView(v.Name()); err != nil {
 		return err
 	}
-	var cond bool
 	switch direction {
 	case DIRECTION_DOWN:
-		cond = gui.podView.Selected < len(gui.state.pods)-1
-		if cond {
-			gui.podView.Selected += 1
-			v.MoveCursor(0, 1, false)
-		}
+		gui.state.pods.NextItem()
 	case DIRECTION_UP:
-		cond = gui.podView.Selected > 0
-		if cond {
-			gui.podView.Selected -= 1
-			v.MoveCursor(0, -1, false)
-		}
+		gui.state.pods.PrevItem()
 	default:
 		return fmt.Errorf("Could not execute movement: %d\n", direction)
-	}
-	if cond {
-		gui.state.currentPod = gui.state.pods[gui.podView.Selected]
-		err := gui.updatePanelViews("details")
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -68,14 +51,10 @@ func (gui *Gui) handlePrevPod(g *gocui.Gui, v *gocui.View) error {
 	return gui.handlePodChange(g, v, DIRECTION_UP)
 }
 
-func (v *PodView) name() string {
-	return v.Name
-}
-
-func (v *PodView) render(state *guiState) error {
+func (v *PodView) UpdateItems(pods []*kubernetes.Pod) error {
 	v.View.Clear()
-	for i, p := range state.pods {
-		if i < len(state.pods)-1 {
+	for i, p := range pods {
+		if i < len(pods)-1 {
 			fmt.Fprintln(v.View, p.Name)
 		} else {
 			fmt.Fprint(v.View, p.Name)
@@ -84,15 +63,10 @@ func (v *PodView) render(state *guiState) error {
 	return nil
 }
 
-func (v *PodView) refresh(state *guiState) error {
-	v.View.MoveCursor(0, -(v.Selected), false)
-	v.render(state)
-	v.Selected = 0
-	if len(state.pods) != 0 {
-		state.currentPod = state.pods[v.Selected]
-	} else {
-		state.currentPod = nil
-	}
+func (v *PodView) UpdateSelected(pod *kubernetes.Pod, line int) error {
+	return v.View.SetCursor(0, line)
+}
 
-	return nil
+func (v *PodView) GetName() string {
+	return v.Name
 }
